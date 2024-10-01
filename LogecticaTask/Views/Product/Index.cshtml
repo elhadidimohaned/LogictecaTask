@@ -1,0 +1,74 @@
+﻿@{
+    ViewData["Title"] = "Product List";
+}
+
+<h2>Product List</h2>
+
+<button id="exportButton" class="btn btn-primary">Export Products</button>
+
+<table id="productTable" class="display" style="width:100%">
+    <thead>
+        <tr>
+            <th>Band</th>
+            <th>Category Code</th>
+            <th>Manufacturer</th>
+            <th>Part SKU</th>
+            <th>Item Description</th>
+            <th>List Price</th>
+            <th>Min Discount</th>
+            <th>Discount Price</th>
+        </tr>
+    </thead>
+</table>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var table = $('#productTable').DataTable({
+                "processing": true,
+                "serverSide": true,
+                "ajax": {
+                    "url": "/Product/GetProducts",
+                    "type": "POST"
+                },
+                "columns": [
+                    { "data": "band" },
+                    { "data": "categoryCode" },
+                    { "data": "manufacturer" },
+                    { "data": "partSKU" },
+                    { "data": "itemDescription" },
+                    { "data": "listPrice" },
+                    { "data": "minDiscount" },
+                    { "data": "discountPrice" }
+                ]
+            });
+
+            $('#exportButton').click(function () {
+                var requestData = {
+                    search: {
+                        value: table.search() 
+                    },
+                };
+
+                $.post({
+                    url: "/Product/ExportProducts",
+                    data: requestData,
+                    xhrFields: {
+                        responseType: 'blob' 
+                    },
+                    success: function (data, status, xhr) {
+                        var blob = new Blob([data], { type: xhr.getResponseHeader('Content-Type') });
+                        var link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = xhr.getResponseHeader('Content-Disposition').split('filename=')[1]; 
+                        link.click();
+                    },
+                    error: function () {
+                        alert("Error exporting products.");
+                    }
+                });
+            });
+        });
+    </script>
+}
